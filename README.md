@@ -26,7 +26,7 @@ The implementation follows the manuscript:
 
 ## Installation
 
-Python 3.10 and PyTorch 2.2 are used in the manuscript.
+Python 3.10, PyTorch 2.2.2 and torchvision 0.17.2 are used in the manuscript.
 
 ```bash
 python -m venv .venv
