@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the associated article."
+title: "ST-CAFNet"
+type: software
+authors:
+  - family-names: Zou
+    given-names: Fanglei
+  - family-names: Yang
+    given-names: Miao
+  - family-names: Wan
+    given-names: Keke
+  - family-names: Song
+    given-names: Daoyi
+  - family-names: Li
+    given-names: Qi
+  - family-names: Zuo
+    given-names: Yongxuan
+  - family-names: Wang
+    given-names: Hongying
+version: 1.0.0
+date-released: 2026-07-02
+repository-code: "https://github.com/fangleizouha/ST-CAFNet"
+license: MIT

@@ -1,0 +1,39 @@
+seed: 42
+device: auto
+output_dir: outputs
+
+data:
+  manifest: data/manifest.csv
+  image_root: data/images
+  enose_root: data/enose
+  image_size: 224
+  enose_length: 120
+  num_sensors: 10
+  test_fraction: 0.15
+  num_folds: 5
+  fold: 0
+  num_workers: 4
+
+model:
+  pretrained: true
+  feature_dim: 512
+  cbam_reduction: 16
+  enose_channels: [64, 128]
+  lstm_hidden: 128
+  lstm_layers: 2
+  lstm_dropout: 0.3
+  attention_heads: 8
+  fusion_dropout: 0.1
+  head_dropout: 0.3
+
+training:
+  batch_size: 16
+  warmup_epochs: 20
+  finetune_epochs: 80
+  warmup_lr: 0.0001
+  backbone_lr: 0.00001
+  other_lr: 0.0001
+  weight_decay: 0.0001
+  patience: 15
+  min_delta: 0.0
+
