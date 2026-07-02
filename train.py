@@ -86,7 +86,17 @@ def validate(model, loader, device, scaler):
     return float(np.mean(losses)), regression_metrics(actual, predicted)
 
 
-def run_stage(model, train_loader, val_loader, device, scaler, config, epochs, warmup):
+def run_stage(
+    model,
+    train_loader,
+    val_loader,
+    device,
+    scaler,
+    config,
+    epochs,
+    warmup,
+    early_stopping,
+):
     optimizer = optimizer_for_stage(model, config, warmup)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer, T_max=max(epochs, 1)
@@ -112,7 +122,7 @@ def run_stage(model, train_loader, val_loader, device, scaler, config, epochs, w
         if val_loss < best_loss - min_delta:
             best_loss, stale = val_loss, 0
             best_state = copy.deepcopy(model.state_dict())
-        else:
+        elif early_stopping:
             stale += 1
             if stale >= patience:
                 break
@@ -145,11 +155,11 @@ def main():
     model = make_model(config).to(device)
     run_stage(
         model, train_loader, val_loader, device, scaler, config,
-        config["training"]["warmup_epochs"], True
+        config["training"]["warmup_epochs"], True, False
     )
     best_loss = run_stage(
         model, train_loader, val_loader, device, scaler, config,
-        config["training"]["finetune_epochs"], False
+        config["training"]["finetune_epochs"], False, True
     )
     output_dir = Path(config["output_dir"]) / f"fold_{fold}"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -170,4 +180,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

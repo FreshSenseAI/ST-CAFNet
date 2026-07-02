@@ -19,7 +19,8 @@ The implementation follows the manuscript:
 2. Two 1D-CNN blocks (64 and 128 channels), followed by a two-layer
    bidirectional LSTM with 128 hidden units per direction.
 3. Two symmetric cross-modal attention streams at a total dimension of 512
-   (8 heads × 64 dimensions per head).
+   (8 heads x 64 dimensions per head). Each global modality feature attends
+   to the temporal or spatial token sequence from the opposite modality.
 4. Dimension-wise vector-gated fusion and a
    `Linear(1024,512)-GELU-Dropout(0.1)-Linear(512,512)` feed-forward block.
 5. Shared-private regression head for TVC, TVB-N and TBARS.
@@ -102,7 +103,7 @@ python infer.py --checkpoint outputs/fold_0/best.pt \
   --manifest data/manifest.csv
 ```
 
-`evaluate.py` reports R², RMSE, MAE and RPD after inverse-transforming each
+`evaluate.py` reports R2, RMSE, MAE and RPD after inverse-transforming each
 target to its original unit.
 
 ## Verification
