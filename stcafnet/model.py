@@ -61,10 +61,12 @@ class VisualEncoder(nn.Module):
         self.pool = nn.AdaptiveAvgPool2d(1)
         self.projection = nn.Linear(1280, feature_dim)
 
-    def forward(self, image: Tensor) -> Tensor:
+    def forward(self, image: Tensor) -> tuple[Tensor, Tensor]:
         x = self.backbone(image)
         x = self.cbam(x)
-        return self.projection(self.pool(x).flatten(1))
+        global_feature = self.projection(self.pool(x).flatten(1))
+        spatial_tokens = self.projection(x.flatten(2).transpose(1, 2))
+        return global_feature, spatial_tokens
 
 
 class ConvBlock1D(nn.Module):
@@ -106,16 +108,17 @@ class OlfactoryEncoder(nn.Module):
         )
         self.projection = nn.Linear(hidden_size * 2, feature_dim)
 
-    def forward(self, enose: Tensor) -> Tensor:
+    def forward(self, enose: Tensor) -> tuple[Tensor, Tensor]:
         if enose.ndim != 3:
             raise ValueError("E-nose input must have shape [batch, time, sensors].")
         x = self.cnn(enose.transpose(1, 2)).transpose(1, 2)
-        sequence, _ = self.lstm(x)
-        return self.projection(sequence[:, -1, :])
+        sequence, (hidden, _) = self.lstm(x)
+        final_bidirectional = torch.cat([hidden[-2], hidden[-1]], dim=-1)
+        return self.projection(final_bidirectional), self.projection(sequence)
 
 
 class CrossModalAttention(nn.Module):
-    """Bidirectional cross-attention over one global token per modality."""
+    """Bidirectional attention from each global feature to opposite-modality tokens."""
 
     def __init__(self, dim: int = 512, num_heads: int = 8) -> None:
         super().__init__()
@@ -128,11 +131,21 @@ class CrossModalAttention(nn.Module):
         self.vision_norm = nn.LayerNorm(dim)
         self.enose_norm = nn.LayerNorm(dim)
 
-    def forward(self, vision: Tensor, enose: Tensor) -> tuple[Tensor, Tensor]:
+    def forward(
+        self,
+        vision: Tensor,
+        enose: Tensor,
+        vision_tokens: Tensor,
+        enose_tokens: Tensor,
+    ) -> tuple[Tensor, Tensor]:
         v = vision.unsqueeze(1)
         e = enose.unsqueeze(1)
-        v_context, _ = self.vision_queries_enose(v, e, e, need_weights=False)
-        e_context, _ = self.enose_queries_vision(e, v, v, need_weights=False)
+        v_context, _ = self.vision_queries_enose(
+            v, enose_tokens, enose_tokens, need_weights=False
+        )
+        e_context, _ = self.enose_queries_vision(
+            e, vision_tokens, vision_tokens, need_weights=False
+        )
         return (
             self.vision_norm(v + v_context).squeeze(1),
             self.enose_norm(e + e_context).squeeze(1),
@@ -232,9 +245,11 @@ class STCAFNet(nn.Module):
             parameter.requires_grad = not frozen
 
     def forward(self, image: Tensor, enose: Tensor) -> STCAFNetOutput:
-        vision = self.visual(image)
-        odor = self.olfactory(enose)
-        vision, odor = self.cross_attention(vision, odor)
+        vision, vision_tokens = self.visual(image)
+        odor, odor_tokens = self.olfactory(enose)
+        vision, odor = self.cross_attention(
+            vision, odor, vision_tokens, odor_tokens
+        )
         fused, gate = self.fusion(vision, odor)
         return STCAFNetOutput(self.head(fused), gate)
 

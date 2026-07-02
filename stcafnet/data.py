@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
+import cv2
 from PIL import Image
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from torch.utils.data import Dataset
@@ -143,7 +144,11 @@ class SalmonDataset(Dataset):
 
     def __getitem__(self, index: int) -> dict[str, torch.Tensor | str]:
         row = self.frame.iloc[index]
-        image = Image.open(self.image_root / row.image_path).convert("RGB")
+        image_path = self.image_root / row.image_path
+        image_bgr = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
+        if image_bgr is None:
+            raise FileNotFoundError(f"Unable to read image: {image_path}")
+        image = Image.fromarray(cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB))
         enose = load_enose(self.enose_root / row.enose_path)
         if enose.shape[0] != self.enose_length:
             raise ValueError(
@@ -157,4 +162,3 @@ class SalmonDataset(Dataset):
             "enose": torch.from_numpy(self.scaler.transform_enose(enose)),
             "targets": torch.from_numpy(self.scaler.transform_labels(labels)),
         }
-
