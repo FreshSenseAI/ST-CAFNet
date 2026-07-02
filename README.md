@@ -5,7 +5,7 @@ cross-attention fusion network for freshness prediction of cold
 plasma-treated salmon**.
 
 ST-CAFNet predicts three freshness indicators from a paired RGB image and a
-120-step, 10-sensor electronic-nose response:
+120-s, 10-sensor electronic-nose response sequence:
 
 - TVC (log10 CFU/g)
 - TVB-N (mg/100 g)
@@ -18,7 +18,8 @@ The implementation follows the manuscript:
 1. EfficientNet-B0 visual backbone with CBAM on the final 1280 x 7 x 7 map.
 2. Two 1D-CNN blocks (64 and 128 channels), followed by a two-layer
    bidirectional LSTM with 128 hidden units per direction.
-3. Two symmetric 8-head cross-modal attention streams at 512 dimensions.
+3. Two symmetric cross-modal attention streams at a total dimension of 512
+   (8 heads x 64 dimensions per head).
 4. Dimension-wise vector-gated fusion and a
    `Linear(1024,512)-GELU-Dropout(0.1)-Linear(512,512)` feed-forward block.
 5. Shared-private regression head for TVC, TVB-N and TBARS.
@@ -26,7 +27,7 @@ The implementation follows the manuscript:
 
 ## Installation
 
-Python 3.10, PyTorch 2.2.2 and torchvision 0.17.2 are used in the manuscript.
+Python 3.10, PyTorch 2.2.2, and torchvision 0.17.2 are used in the manuscript.
 
 ```bash
 python -m venv .venv
