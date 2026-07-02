@@ -1,13 +1,13 @@
 # ST-CAFNet
 
-Official PyTorch implementation of **ST-CAFNet: A visual-olfactory multimodal
+PyTorch implementation of **ST-CAFNet: A visual-olfactory multimodal
 cross-attention fusion network for freshness prediction of cold
 plasma-treated salmon**.
 
 ST-CAFNet predicts three freshness indicators from a paired RGB image and a
 120-s, 10-sensor electronic-nose response sequence:
 
-- TVC (log10 CFU/g)
+- TVC (log₁₀ CFU/g)
 - TVB-N (mg/100 g)
 - TBARS (mg MDA/kg)
 
